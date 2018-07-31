@@ -1,6 +1,7 @@
 #include <esp_event.h>
 #include <esp_event_loop.h>
 #include <esp_wifi.h>
+#include <esp_wpa2.h>
 #include <string.h>
 
 #include "utils.h"
@@ -123,17 +124,31 @@ void naos_wifi_configure(const char *ssid, const char *password) {
 
     // stop wifi
     ESP_ERROR_CHECK(esp_wifi_stop());
+    ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_disable());
   }
 
   // assign ssid and password
   strcpy((char *)naos_wifi_config.sta.ssid, ssid);
-  strcpy((char *)naos_wifi_config.sta.password, password);
+
+  // TODO: Disable if username is given.
+  //strcpy((char *)naos_wifi_config.sta.password, password);
 
   // set to station mode
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
 
   // assign configuration
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &naos_wifi_config));
+
+  // TODO: Make username configurable.
+  const char * id = "";
+  const char * pw = "";
+  ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)id, (int)strlen(id)));
+  ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_set_username((uint8_t *)id, (int)strlen(id)));
+  ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_set_password((uint8_t *)pw, (int)strlen(pw)));
+  esp_wpa2_config_t cfg = WPA2_CONFIG_INIT_DEFAULT();
+  ESP_ERROR_CHECK(esp_wifi_sta_wpa2_ent_enable(&cfg));
+
+  // TODO: Check with new esp-idf branch.
 
   // update local flag
   naos_wifi_started = true;
